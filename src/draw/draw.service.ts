@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { Assignment } from './assignment.entity';
 import { MembersService } from '../members/members.service';
 import { Member } from '../members/member.entity';
-import { normalizePhone } from '../common/phone.util';
+import { normalizeKeyword } from '../common/keyword.util';
 
 @Injectable()
 export class DrawService {
@@ -140,16 +140,16 @@ export class DrawService {
     return assignment;
   }
 
-  /** Solo entrega la asignación si el teléfono coincide con el del piloto elegido. */
+  /** Solo entrega la asignación si la palabra clave coincide con la del piloto elegido. */
   async confirmAndGetAssignment(
     memberId: string,
-    phone: string,
+    keyword: string,
   ): Promise<Assignment> {
     const member = await this.membersService.findOne(memberId);
-    const normalized = normalizePhone(phone);
+    const normalized = normalizeKeyword(keyword);
 
-    if (!member.phone || member.phone !== normalized) {
-      throw new ForbiddenException('El teléfono no coincide con ese piloto.');
+    if (!member.keyword || member.keyword !== normalized) {
+      throw new ForbiddenException('La palabra clave no coincide con ese piloto.');
     }
 
     return this.getAssignmentForMember(memberId);

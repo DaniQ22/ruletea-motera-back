@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { MembersService } from './members.service';
 import { CreateMemberDto } from './dto/create-member.dto';
-import { UpdatePhoneDto } from './dto/update-phone.dto';
+import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { AdminGuard } from '../common/admin.guard';
 
 @Controller('members')
@@ -27,9 +27,9 @@ export class MembersController {
     return this.membersService.create(dto);
   }
 
-  @Patch(':id/phone')
-  updatePhone(@Param('id') id: string, @Body() dto: UpdatePhoneDto) {
-    return this.membersService.updatePhone(id, dto);
+  @Patch(':id/keyword')
+  updateKeyword(@Param('id') id: string, @Body() dto: UpdateKeywordDto) {
+    return this.membersService.updateKeyword(id, dto);
   }
 
   @UseGuards(AdminGuard)

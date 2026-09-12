@@ -9,8 +9,12 @@ import { Repository } from 'typeorm';
 import { Member } from './member.entity';
 import { Assignment } from '../draw/assignment.entity';
 import { CreateMemberDto } from './dto/create-member.dto';
-import { UpdatePhoneDto } from './dto/update-phone.dto';
-import { PHONE_ERROR_MESSAGE, isValidPhone, normalizePhone } from '../common/phone.util';
+import { UpdateKeywordDto } from './dto/update-keyword.dto';
+import {
+  KEYWORD_ERROR_MESSAGE,
+  isValidKeyword,
+  normalizeKeyword,
+} from '../common/keyword.util';
 
 @Injectable()
 export class MembersService {
@@ -35,9 +39,9 @@ export class MembersService {
 
   async create(dto: CreateMemberDto): Promise<Member> {
     const name = dto.name.trim();
-    const phone = normalizePhone(dto.phone);
-    if (!isValidPhone(phone)) {
-      throw new BadRequestException(PHONE_ERROR_MESSAGE);
+    const keyword = normalizeKeyword(dto.keyword);
+    if (!isValidKeyword(keyword)) {
+      throw new BadRequestException(KEYWORD_ERROR_MESSAGE);
     }
 
     const existingName = await this.membersRepository.findOne({
@@ -47,32 +51,18 @@ export class MembersService {
       throw new ConflictException('Ya hay un miembro registrado con ese nombre.');
     }
 
-    const existingPhone = await this.membersRepository.findOne({
-      where: { phone },
-    });
-    if (existingPhone) {
-      throw new ConflictException('Ese teléfono ya está registrado.');
-    }
-
-    const member = this.membersRepository.create({ name, phone });
+    const member = this.membersRepository.create({ name, keyword });
     return this.membersRepository.save(member);
   }
 
-  async updatePhone(id: string, dto: UpdatePhoneDto): Promise<Member> {
+  async updateKeyword(id: string, dto: UpdateKeywordDto): Promise<Member> {
     const member = await this.findOne(id);
-    const phone = normalizePhone(dto.phone);
-    if (!isValidPhone(phone)) {
-      throw new BadRequestException(PHONE_ERROR_MESSAGE);
+    const keyword = normalizeKeyword(dto.keyword);
+    if (!isValidKeyword(keyword)) {
+      throw new BadRequestException(KEYWORD_ERROR_MESSAGE);
     }
 
-    const existingPhone = await this.membersRepository.findOne({
-      where: { phone },
-    });
-    if (existingPhone && existingPhone.id !== id) {
-      throw new ConflictException('Ese teléfono ya está registrado.');
-    }
-
-    member.phone = phone;
+    member.keyword = keyword;
     return this.membersRepository.save(member);
   }
 

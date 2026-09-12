@@ -35,12 +35,12 @@ export class DrawController {
     return this.drawService.getChecklist();
   }
 
-  @Get(':memberId/confirm/:phone')
+  @Get(':memberId/confirm/:keyword')
   confirmAndGetAssignment(
     @Param('memberId') memberId: string,
-    @Param('phone') phone: string,
+    @Param('keyword') keyword: string,
   ) {
-    return this.drawService.confirmAndGetAssignment(memberId, phone);
+    return this.drawService.confirmAndGetAssignment(memberId, keyword);
   }
 
   @Post(':memberId/reveal')

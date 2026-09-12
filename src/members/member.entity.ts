@@ -8,8 +8,8 @@ export class Member {
   @Column({ unique: true })
   name: string;
 
-  @Column({ unique: true, nullable: true })
-  phone: string | null;
+  @Column({ nullable: true })
+  keyword: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
