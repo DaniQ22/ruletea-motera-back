@@ -23,6 +23,18 @@ export class DrawController {
     return this.drawService.reset();
   }
 
+  @UseGuards(AdminGuard)
+  @Post('complete-remaining')
+  completeRemaining() {
+    return this.drawService.completeRemaining();
+  }
+
+  @UseGuards(AdminGuard)
+  @Get('checklist')
+  getChecklist() {
+    return this.drawService.getChecklist();
+  }
+
   @Get(':memberId/confirm/:phone')
   confirmAndGetAssignment(
     @Param('memberId') memberId: string,

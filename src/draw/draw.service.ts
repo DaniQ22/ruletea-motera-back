@@ -39,6 +39,22 @@ export class DrawService {
     return shuffled;
   }
 
+  /** Arma un ciclo válido para el grupo dado y guarda las asignaciones. */
+  private async pairUpGroup(members: Member[]): Promise<Assignment[]> {
+    const cycle = this.buildCycle(members);
+    const assignments = cycle.map((giver, index) => {
+      const receiver = cycle[(index + 1) % cycle.length];
+      return this.assignmentsRepository.create({
+        giverId: giver.id,
+        giverName: giver.name,
+        receiverId: receiver.id,
+        receiverName: receiver.name,
+      });
+    });
+
+    return this.assignmentsRepository.save(assignments);
+  }
+
   async performDraw(): Promise<Assignment[]> {
     const existing = await this.assignmentsRepository.count();
     if (existing > 0) {
@@ -54,18 +70,62 @@ export class DrawService {
       );
     }
 
-    const cycle = this.buildCycle(members);
-    const assignments = cycle.map((giver, index) => {
-      const receiver = cycle[(index + 1) % cycle.length];
-      return this.assignmentsRepository.create({
-        giverId: giver.id,
-        giverName: giver.name,
-        receiverId: receiver.id,
-        receiverName: receiver.name,
-      });
-    });
+    return this.pairUpGroup(members);
+  }
 
-    return this.assignmentsRepository.save(assignments);
+  /**
+   * Empareja solo a quienes todavía no tienen pareja (rezagados o
+   * miembros que se anotaron después del sorteo inicial), sin tocar
+   * las parejas que ya existen.
+   */
+  async completeRemaining(): Promise<Assignment[]> {
+    const totalAssignments = await this.assignmentsRepository.count();
+    if (totalAssignments === 0) {
+      throw new BadRequestException(
+        'Todavía no se ha hecho el sorteo inicial. Usa "Realizar sorteo" primero.',
+      );
+    }
+
+    const [allMembers, existingAssignments] = await Promise.all([
+      this.membersService.findAll(),
+      this.assignmentsRepository.find(),
+    ]);
+
+    const pairedIds = new Set(existingAssignments.map((a) => a.giverId));
+    const unpaired = allMembers.filter((m) => !pairedIds.has(m.id));
+
+    if (unpaired.length === 0) {
+      throw new BadRequestException('Todos los pilotos ya tienen pareja.');
+    }
+    if (unpaired.length < 2) {
+      throw new BadRequestException(
+        'Falta un solo piloto sin pareja; necesitas al menos 2 para poder emparejarlos entre sí.',
+      );
+    }
+
+    return this.pairUpGroup(unpaired);
+  }
+
+  /** Estado por piloto para el admin: si ya tiene pareja y si ya giró, sin revelar con quién. */
+  async getChecklist(): Promise<
+    { id: string; name: string; hasPartner: boolean; revealed: boolean }[]
+  > {
+    const [members, assignments] = await Promise.all([
+      this.membersService.findAll(),
+      this.assignmentsRepository.find(),
+    ]);
+
+    const byGiverId = new Map(assignments.map((a) => [a.giverId, a]));
+
+    return members.map((member) => {
+      const assignment = byGiverId.get(member.id);
+      return {
+        id: member.id,
+        name: member.name,
+        hasPartner: !!assignment,
+        revealed: assignment?.revealed ?? false,
+      };
+    });
   }
 
   async getAssignmentForMember(memberId: string): Promise<Assignment> {

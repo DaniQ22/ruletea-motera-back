@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Member } from './member.entity';
+import { Assignment } from '../draw/assignment.entity';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdatePhoneDto } from './dto/update-phone.dto';
 import { PHONE_ERROR_MESSAGE, isValidPhone, normalizePhone } from '../common/phone.util';
@@ -16,6 +17,8 @@ export class MembersService {
   constructor(
     @InjectRepository(Member)
     private readonly membersRepository: Repository<Member>,
+    @InjectRepository(Assignment)
+    private readonly assignmentsRepository: Repository<Assignment>,
   ) {}
 
   findAll(): Promise<Member[]> {
@@ -74,10 +77,18 @@ export class MembersService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.membersRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException('Ese piloto no está en el club.');
+    await this.findOne(id);
+
+    const hasPair = await this.assignmentsRepository.count({
+      where: [{ giverId: id }, { receiverId: id }],
+    });
+    if (hasPair > 0) {
+      throw new BadRequestException(
+        'Ese piloto ya tiene pareja asignada en el sorteo. Reinicia el sorteo antes de eliminarlo.',
+      );
     }
+
+    await this.membersRepository.delete(id);
   }
 
   async count(): Promise<number> {

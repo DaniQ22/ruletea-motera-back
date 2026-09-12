@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppController } from './app.controller';
@@ -11,6 +12,7 @@ import { Assignment } from './draw/assignment.entity';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: process.env.DB_PATH ?? join(__dirname, '..', 'data', 'club.sqlite'),
