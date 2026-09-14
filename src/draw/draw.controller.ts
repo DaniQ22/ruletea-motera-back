@@ -35,6 +35,12 @@ export class DrawController {
     return this.drawService.getChecklist();
   }
 
+  @UseGuards(AdminGuard)
+  @Get('pairs')
+  getPairs() {
+    return this.drawService.getAllPairs();
+  }
+
   @Get(':memberId/confirm/:keyword')
   confirmAndGetAssignment(
     @Param('memberId') memberId: string,

@@ -128,6 +128,11 @@ export class DrawService {
     });
   }
 
+  /** Revela todas las parejas para uso de emergencia del admin (ej. algo le pasó a un piloto). */
+  async getAllPairs(): Promise<Assignment[]> {
+    return this.assignmentsRepository.find({ order: { giverName: 'ASC' } });
+  }
+
   async getAssignmentForMember(memberId: string): Promise<Assignment> {
     const assignment = await this.assignmentsRepository.findOne({
       where: { giverId: memberId },
